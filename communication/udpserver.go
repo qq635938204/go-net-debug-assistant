@@ -45,6 +45,7 @@ func handleUDPConnection(conn net.PacketConn) {
 	for {
 		select {
 		case <-stopUDPCh:
+			logs.Info("Stopping UDP server...")
 			return
 		default:
 			// 接收数据

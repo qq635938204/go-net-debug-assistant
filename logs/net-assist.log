@@ -50,3 +50,55 @@
 2024/12/22 22:41:50.811  [I] [tcpserverex.go:50]  Accepting from 127.0.0.1:54949
 2024/12/22 22:41:50.811  [I] [service.go:26]  recv from 127.0.0.1:54949, 313233
 2024/12/22 22:41:50.812  [I] [tcpserverex.go:66]  read from client failed, err:  EOF
+2024/12/22 22:48:55.826  [I] [tcpserverex.go:37]  Start tcp server on port 9999
+2024/12/22 22:48:55.826  [I] [udpserver.go:31]  UDP server listening on port 9999...
+
+2024/12/22 22:48:55.947  [I] [server.go:280]  http server Running on http://:9888
+2024/12/22 22:49:01.339  [I] [udpserver.go:59]  Received from 127.0.0.1:57496: 111
+
+2024/12/22 22:49:01.339  [I] [udpserver.go:62]  Echo 127.0.0.1:57496: 111
+2024/12/22 22:49:02.183  [I] [udpserver.go:59]  Received from 127.0.0.1:57497: 111
+
+2024/12/22 22:49:02.183  [I] [udpserver.go:62]  Echo 127.0.0.1:57497: 111
+2024/12/22 22:49:02.430  [I] [udpserver.go:59]  Received from 127.0.0.1:51426: 111
+
+2024/12/22 22:49:02.430  [I] [udpserver.go:62]  Echo 127.0.0.1:51426: 111
+2024/12/22 22:49:02.622  [I] [udpserver.go:59]  Received from 127.0.0.1:51427: 111
+
+2024/12/22 22:49:02.622  [I] [udpserver.go:62]  Echo 127.0.0.1:51427: 111
+2024/12/22 22:49:02.821  [I] [udpserver.go:59]  Received from 127.0.0.1:51428: 111
+
+2024/12/22 22:49:02.821  [I] [udpserver.go:62]  Echo 127.0.0.1:51428: 111
+2024/12/22 22:49:38.192  [I] [tcpserverex.go:37]  Start tcp server on port 9999
+2024/12/22 22:49:38.193  [I] [udpserver.go:31]  UDP server listening on port 9999...
+
+2024/12/22 22:49:38.296  [I] [server.go:280]  http server Running on http://:9888
+2024/12/22 22:50:52.202  [I] [tcpserverex.go:37]  Start tcp server on port 9999
+2024/12/22 22:50:52.202  [I] [udpserver.go:31]  UDP server listening on port 9999...
+
+2024/12/22 22:50:52.297  [I] [server.go:280]  http server Running on http://:9888
+2024/12/22 22:51:39.439  [I] [tcpserverex.go:37]  Start tcp server on port 9999
+2024/12/22 22:51:39.439  [I] [udpserver.go:31]  UDP server listening on port 9999...
+
+2024/12/22 22:51:39.549  [I] [server.go:280]  http server Running on http://:9888
+2024/12/22 22:52:24.630  [I] [tcpserverex.go:37]  Start tcp server on port 9999
+2024/12/22 22:52:24.630  [I] [udpserver.go:31]  UDP server listening on port 9999...
+
+2024/12/22 22:52:24.717  [I] [server.go:280]  http server Running on http://:9888
+2024/12/22 22:52:25.860  [I] [service.go:21]  Stopping service...
+2024/12/22 22:53:09.607  [I] [tcpserverex.go:37]  Start tcp server on port 10000
+2024/12/22 22:53:09.607  [I] [udpserver.go:31]  UDP server listening on port 9999...
+
+2024/12/22 22:53:09.738  [I] [server.go:280]  http server Running on http://:9888
+2024/12/22 22:53:43.454  [I] [udpserver.go:60]  Received from 127.0.0.1:59787: 123
+
+2024/12/22 22:53:43.454  [I] [udpserver.go:63]  Echo 127.0.0.1:59787: 123
+2024/12/22 22:53:43.934  [I] [udpserver.go:60]  Received from 127.0.0.1:59788: 123
+
+2024/12/22 22:53:43.934  [I] [udpserver.go:63]  Echo 127.0.0.1:59788: 123
+2024/12/22 22:53:44.328  [I] [udpserver.go:60]  Received from 127.0.0.1:59789: 123
+
+2024/12/22 22:53:44.328  [I] [udpserver.go:63]  Echo 127.0.0.1:59789: 123
+2024/12/22 22:53:44.521  [I] [udpserver.go:60]  Received from 127.0.0.1:57253: 123
+
+2024/12/22 22:53:44.521  [I] [udpserver.go:63]  Echo 127.0.0.1:57253: 123

@@ -11,13 +11,15 @@ import (
 var gTCPServer = &communication.TcpServerEx{}
 
 func StartService() {
-	tcpPort := beego.AppConfig.DefaultInt64("udp_server_port", 10000)
+	tcpPort := beego.AppConfig.DefaultInt64("tcp_server_port", 10000)
 	go gTCPServer.Start(tcpPort, "TCP", tcpMessageHandler)
 	udpPort := beego.AppConfig.DefaultInt64("udp_server_port", 9999)
 	go communication.StartUDPServer(udpPort)
 }
 
 func StopService() {
+	logs.Info("Stopping service...")
+	defer logs.Info("Service stopped.")
 	gTCPServer.Stop()
 	communication.StopUDPServer()
 }
