@@ -19,23 +19,22 @@ var bufferPool = sync.Pool{
 }
 
 func StartUDPServer(port int64) {
-	conn, err := net.ListenPacket("udp", fmt.Sprintf(": %d", port))
-	if err != nil {
+	if conn, err := net.ListenPacket("udp", fmt.Sprintf(":%d", port)); err != nil {
 		logs.Error("Error listening", err.Error())
-		return
-	}
-	wgUDP.Add(1)
-	defer wgUDP.Done()
-	defer conn.Close()
+	} else {
+		wgUDP.Add(1)
+		defer wgUDP.Done()
+		defer conn.Close()
 
-	logs.Info("UDP server listening on port %d...\n", port)
-	stopUDPCh = make(chan struct{})
+		logs.Info("UDP server listening on port %d...\n", port)
+		stopUDPCh = make(chan struct{})
 
-	for i := 0; i < 10; i++ { // 启动多个 goroutine 以提高并发性能
-		go handleUDPConnection(conn)
+		for i := 0; i < 10; i++ { // 启动多个 goroutine 以提高并发性能
+			go handleUDPConnection(conn)
+		}
+		<-stopUDPCh
+		logs.Info("Stopping server...")
 	}
-	<-stopUDPCh
-	logs.Info("Stopping server...")
 }
 
 func handleUDPConnection(conn net.PacketConn) {
