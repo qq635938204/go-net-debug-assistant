@@ -1,6 +1,7 @@
 package communication
 
 import (
+	"encoding/hex"
 	"fmt"
 	"net"
 	"sync"
@@ -55,12 +56,16 @@ func handleUDPConnection(conn net.PacketConn) {
 			}
 
 			// 处理数据
-			receivedMessage := string((*buffer)[:n])
+			receivedMessage := hex.EncodeToString((*buffer)[:n])
+			// 如果接收头是00000014,则转为string
+			if len(receivedMessage) > 8 && receivedMessage[:8] == "00000014" {
+				receivedMessage = "00000020" + string((*buffer)[4:n])
+			}
 			logs.Info("Received from %s: %s\n", addr.String(), receivedMessage)
 
 			// 回复客户端
 			logs.Info("Echo %s: %s", addr.String(), receivedMessage)
-			_, err = conn.WriteTo([]byte(receivedMessage), addr)
+			_, err = conn.WriteTo((*buffer)[:n], addr)
 			if err != nil {
 				logs.Error("Error sending to UDP:", err)
 			}
