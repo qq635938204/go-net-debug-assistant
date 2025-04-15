@@ -310,7 +310,11 @@ func SendMulticast(multicastIP string, port int, message string) error {
 	if err != nil {
 		return fmt.Errorf("创建UDP连接失败: %w", err)
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			fmt.Printf("关闭UDP连接失败: %v\n", err)
+		}
+	}()
 
 	_, errw := conn.Write([]byte(message))
 	if errw != nil {
@@ -385,7 +389,11 @@ func SendMulticastWithInterface(multicastIP string, port int, message string, lo
 	if err != nil {
 		return fmt.Errorf("创建 UDP 连接失败: %w", err)
 	}
-	defer conn.Close()
+	defer func() {
+		if err := conn.Close(); err != nil {
+			fmt.Printf("关闭 UDP 连接失败: %v\n", err)
+		}
+	}()
 
 	// 发送组播消息
 	_, err = conn.Write([]byte(message))
