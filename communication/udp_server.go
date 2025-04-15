@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"golang.org/x/net/ipv4"
+	"golang.org/x/net/ipv6"
 )
 
 // UDPConfig 配置结构体
@@ -54,7 +55,7 @@ func (r *UDPServer) listInterface() {
 }
 
 // Start 启动UDP服务器
-func (r *UDPServer) StartUDPServer(config UDPConfig, handler func(*net.UDPAddr, []byte) []byte, withSender bool) {
+func (r *UDPServer) Start(config UDPConfig, handler func(*net.UDPAddr, []byte) []byte, withSender bool) {
 	r.config = config
 
 	// 设置默认 Logger
@@ -128,14 +129,14 @@ func (r *UDPServer) StartUDPServer(config UDPConfig, handler func(*net.UDPAddr, 
 	r.logInfo("Channel size: %d", r.config.ChannelSize)
 	atomic.StoreInt32(&r.running, 1)
 	r.wg.Add(1)
-	go r.run()
+	go r.run(r.conn)
 	if r.withSender {
 		r.wg.Add(1)
 		go r.startSender()
 	}
 }
 
-// joinMulticastGroup 加入组播组
+// joinMulticastGroup 加入组播组（支持 IPv4 和 IPv6）
 func (r *UDPServer) joinMulticastGroup(multicastIP string, interfaceName string) error {
 	// 解析组播地址
 	group := net.ParseIP(multicastIP)
@@ -144,25 +145,39 @@ func (r *UDPServer) joinMulticastGroup(multicastIP string, interfaceName string)
 	}
 
 	// 获取指定的网络接口
-	iface, err := net.InterfaceByName(interfaceName)
-	if err != nil {
-		return fmt.Errorf("获取网络接口失败: %w", err)
-	}
-	if iface == nil {
-		return fmt.Errorf("未找到网络接口: %s", interfaceName)
+	var iface *net.Interface
+	var err error
+	if interfaceName != "" {
+		iface, err = net.InterfaceByName(interfaceName)
+		if err != nil {
+			return fmt.Errorf("获取网络接口失败: %w", err)
+		}
 	}
 
-	// 使用 ipv4 包加入组播组
-	p := ipv4.NewPacketConn(r.conn)
-	err = p.JoinGroup(iface, &net.UDPAddr{IP: group})
-	if err != nil {
-		return fmt.Errorf("加入组播组失败: %w", err)
+	// 判断是 IPv4 还是 IPv6
+	if group.To4() != nil {
+		// IPv4 组播
+		p := ipv4.NewPacketConn(r.conn)
+		err = p.JoinGroup(iface, &net.UDPAddr{IP: group})
+		if err != nil {
+			return fmt.Errorf("加入 IPv4 组播组失败: %w", err)
+		}
+		r.logInfo("成功加入 IPv4 组播组: %s", multicastIP)
+	} else {
+		// IPv6 组播
+		p := ipv6.NewPacketConn(r.conn)
+		err = p.JoinGroup(iface, &net.UDPAddr{IP: group})
+		if err != nil {
+			return fmt.Errorf("加入 IPv6 组播组失败: %w", err)
+		}
+		r.logInfo("成功加入 IPv6 组播组: %s", multicastIP)
 	}
+
 	return nil
 }
 
 // Stop 停止UDP服务器
-func (r *UDPServer) StopUDPServer() {
+func (r *UDPServer) Stop() {
 	if r.conn != nil {
 		if r.cancel != nil {
 			r.cancel() // 只有在 r.cancel 不为 nil 时调用
@@ -219,7 +234,7 @@ func (r *UDPServer) send(cmd SendCommand) {
 }
 
 // run 接收器主循环
-func (r *UDPServer) run() {
+func (r *UDPServer) run(conn *net.UDPConn) {
 	defer r.wg.Done()
 
 	buffer := make([]byte, r.config.BufferSize)
@@ -230,11 +245,11 @@ func (r *UDPServer) run() {
 			r.logInfo("UDP receiver stopping...")
 			return
 		default:
-			if err := r.conn.SetReadDeadline(time.Now().Add(1 * time.Second)); err != nil {
+			if err := conn.SetReadDeadline(time.Now().Add(1 * time.Second)); err != nil {
 				r.logError("Set read deadline error: %v", err)
 				return
 			}
-			n, addr, err := r.conn.ReadFromUDP(buffer)
+			n, addr, err := conn.ReadFromUDP(buffer)
 			if err != nil {
 				if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
 					continue
@@ -250,7 +265,7 @@ func (r *UDPServer) run() {
 				go func(addr *net.UDPAddr, data []byte) {
 					response := r.handler(addr, data)
 					if len(response) > 0 {
-						_, err := r.conn.WriteToUDP(response, addr)
+						_, err := conn.WriteToUDP(response, addr)
 						if err != nil {
 							r.logError("Send response error: %v", err)
 						}
@@ -347,6 +362,35 @@ func (r *UDPServer) joinSourceSpecificMulticastGroup(multicastIP string, sourceI
 			return fmt.Errorf("加入指定源组播组失败 (组播地址: %s, 源地址: %s): %w", multicastIP, sourceIP, err)
 		}
 		r.logInfo("Joined source-specific multicast group: %s (source: %s)", multicastIP, sourceIP)
+	}
+
+	return nil
+}
+
+func SendMulticastWithInterface(multicastIP string, port int, message string, localIP string) error {
+	// 解析组播地址
+	addr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:%d", multicastIP, port))
+	if err != nil {
+		return fmt.Errorf("解析组播地址失败: %w", err)
+	}
+
+	// 解析本地地址（指定网卡或 IP）
+	localAddr, err := net.ResolveUDPAddr("udp", fmt.Sprintf("%s:0", localIP))
+	if err != nil {
+		return fmt.Errorf("解析本地地址失败: %w", err)
+	}
+
+	// 创建 UDP 连接，绑定到指定的本地地址
+	conn, err := net.DialUDP("udp", localAddr, addr)
+	if err != nil {
+		return fmt.Errorf("创建 UDP 连接失败: %w", err)
+	}
+	defer conn.Close()
+
+	// 发送组播消息
+	_, err = conn.Write([]byte(message))
+	if err != nil {
+		return fmt.Errorf("发送组播消息失败: %w", err)
 	}
 
 	return nil
